@@ -1,7 +1,10 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  --font-exo2: 'Exo 2', sans-serif;
   background-color: #171717;
-  color: bisque;
+  color:beige;
 }

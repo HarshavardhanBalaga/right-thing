@@ -1,46 +1,58 @@
 'use client'
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
-import { useRouter } from 'next/navigation' // ✅ FIXED
 
-const Page = () => {
+export default function Login() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(true)
 
-  const handlelogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+  useEffect(() => {
+    // ✅ wait for client hydration
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        router.replace('/dashboard') // already logged in
+      } else {
+        setLoading(false)
+      }
+    }
+    checkSession()
+
+    // ✅ react to auth changes in real time
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) router.replace('/dashboard')
     })
 
-    if (error) {
-      console.log(error)
-    } else {
-      console.log(data)
-      setTimeout(() => {
-        router.push('/dashboard') // or any page you want
-      }, 1000)
+    return () => {
+      listener.subscription.unsubscribe()
     }
+  }, [router])
+
+  const handleLogin = async () => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) console.log(error)
   }
+
+  if (loading) return <p>Loading...</p>
 
   return (
     <div>
+      <h1>Login</h1>
       <input
-        type="text"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
       <input
-        type="password"
         placeholder="Password"
+        type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button onClick={handlelogin}>Login</button>
+      <button onClick={handleLogin}>Login</button>
     </div>
   )
 }
-
-export default Page
